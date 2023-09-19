@@ -796,7 +796,7 @@ void User_Interaction()  //用户输入命令
 	}
 	else if(operation !="login" && operation !="register" && operation !="help" && operation !="clear" && operation !="exit" && !User_Login_or_not())
 	{
-		cout<<"当前没有登录，请使用User_Login进行登录，或者使用register进行注册"<<endl;
+		cout<<"当前没有登录，请使用login进行登录，或者使用register进行注册"<<endl;
 	}
 	else if (operation=="logout" && User_Login_or_not())
 	{
