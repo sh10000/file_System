@@ -94,6 +94,7 @@ User_Open_File *current_Open_Filetable; 				//指向当前文件打开表
 char *fdisk; 		//虚拟磁盘的起始位置
 int user_size = 0; 	//记录当前用户的人数（上限16）
 string File_Path; 		//记录当前用户的路径
+int index=-1;
 bool User_Login_or = false; 	//记录当前是否有用户登录
 
 
@@ -107,13 +108,7 @@ int File_Create(File name)
 		return -1;
 	}
 
-	//获取文件夹下标
-	int index; //标识当前目录在Directory数组中第几个
-	for (index = 0; index < user.next->user_Directory_size; index++)	//遍历当前用户所有的文件夹
-	{
-		if (File_Path == user.next->Directory[index].Directory_Name)	//判断
-			break;
-	}
+
 
 	//文件重名判断
 	int i;
@@ -163,15 +158,6 @@ int File_Create(File name)
 //打开文件
 int Open_File(File name)
 {
-	//遍历该用户所有的文件夹
-	int index; //标识当前目录在Directory数组中第几个
-	for (index = 0; index < user.next->user_Directory_size; index++)
-	{
-		if (File_Path == user.next->Directory[index].Directory_Name)	//找指定名称的目录
-		{
-			break;
-		}
-	}
 
 	//遍历该文件夹下的文件
 	int i;
@@ -226,12 +212,7 @@ int Open_File(File name)
 //修改文件属性
 void Change_Attribute(File name)
 {
-	int index; //标识当前目录在Directory数组中第几个
-	for (index = 0; index < user.next->user_Directory_size; index++)	//遍历该用户所有的文件夹
-	{
-		if (File_Path == user.next->Directory[index].Directory_Name)		//找指定名称的目录
-			break;
-	}
+
 
 	int i;
 	for (i = 0; i < user.next->Directory[index].current_file_size; i++)	//遍历该文件夹下的文件
@@ -352,13 +333,8 @@ int Close_File(File name)
 //删除文件
 int Delete_File(File name)
 {
-	//找到当前目录
-	int index; //标识当前目录在Directory数组中第几个
-	for (index = 0; index < user.next->user_Directory_size; index++)
-	{
-		if (File_Path == user.next->Directory[index].Directory_Name)
-			break;
-	}
+
+
 
 	//遍历当前目录下的文件
 	int i;
@@ -408,24 +384,16 @@ int Delete_File(File name)
 //读取文件
 int Read_File(File name)
 {
-	//文件目录下标
-	int index1; //标识当前目录在Directory数组中第几个
-	for (index1 = 0; index1 < user.next->user_Directory_size; index1++)
-	{
-		if (File_Path == user.next->Directory[index1].Directory_Name)
-		{
-			break;
-		}
-	}
+
 
 	//文件下标
 	int a; //遍历文件
-	for (a = 0; a < user.next->Directory[index1].current_file_size; a++)    //判断文件是否存在
+	for (a = 0; a < user.next->Directory[index].current_file_size; a++)    //判断文件是否存在
 	{
-		if (user.next->Directory[index1].ufd[a].filename == name)
+		if (user.next->Directory[index].ufd[a].filename == name)
 			break;
 	}
-	if (a >= user.next->Directory[index1].current_file_size)
+	if (a >= user.next->Directory[index].current_file_size)
 	{
 		cout << "没有这个文件" << endl;
 		return -1;
@@ -500,12 +468,7 @@ int Read_File(File name)
 int Write_File(File name, char * buf, int len)
 {
 	//获取文件目录数组下标（当前是哪个文件夹）
-	int index1; //标识当前目录在Directory数组中第几个
-	for (index1 = 0; index1 < user.next->user_Directory_size; index1++)
-	{
-		if (File_Path == user.next->Directory[index1].Directory_Name)
-			break;
-	}
+
 
 	int i;
 	for (i = 0; i < current_Open_Filetable->current_Open_Filefilesize; i++)
@@ -519,9 +482,9 @@ int Write_File(File name, char * buf, int len)
 	int temp; //保存当前所写的文件在用户文件目录表的第几项，为了后面修改文件的大小
 	int first_block = current_Open_Filetable->uof[fd].addr; //用户文件存放的第一个磁盘块
 	//遍历当前目录下所有文件，获取文件下标temp（打开表下标是fd ； 文件下标是temp）
-	for (int k = 0; k < user.next->Directory[index1].current_file_size; k++)
+	for (int k = 0; k < user.next->Directory[index].current_file_size; k++)
 	{
-		if (user.next->Directory[index1].ufd[k].addr == first_block)
+		if (user.next->Directory[index].ufd[k].addr == first_block)
 		{
 			temp = k;
 			break;
@@ -547,7 +510,7 @@ int Write_File(File name, char * buf, int len)
 			first[i] = buf[i];//将缓冲区的内容写入虚拟磁盘中
 		}
 		current_Open_Filetable->uof[fd].pointer = current_Open_Filetable->uof[fd].pointer + len;  //更新文件打开表
-		user.next->Directory[index1].ufd[temp].length = user.next->Directory[index1].ufd[temp].length + len; //更新用户目录文件表
+		user.next->Directory[index].ufd[temp].length = user.next->Directory[index].ufd[temp].length + len; //更新用户目录文件表
 	}
 	else	//如果磁盘剩下的空间不足写入
 	{
@@ -605,7 +568,7 @@ int Write_File(File name, char * buf, int len)
 			//更新文件打开表
 			current_Open_Filetable->uof[fd].pointer = current_Open_Filetable->uof[fd].pointer + last_size;
 			//更新用户目录文件表
-			user.next->Directory[index1].ufd[temp].length = user.next->Directory[index1].ufd[temp].length + last_size;
+			user.next->Directory[index].ufd[temp].length = user.next->Directory[index].ufd[temp].length + last_size;
 		}
 	}
 	cout << "文件写入成功" << endl;
@@ -615,12 +578,6 @@ int Write_File(File name, char * buf, int len)
 // 列文件目录
 void dir()
 {
-	int index1; //标识当前目录在Directory数组中第几个
-	for (index1 = 0; index1 < user.next->user_Directory_size; index1++)
-	{
-		if (File_Path == user.next->Directory[index1].Directory_Name)
-			break;
-	}
 	if (File_Path == "") //表示此时路径在用户的目录表，显示文件目录
 	{
 		cout << "\t" << "目录名" << endl;
@@ -630,9 +587,9 @@ void dir()
 	else  //显示目录下的文件
 	{
 		cout << "\t" << "文件名" << "\t" << "文件起始盘块号" << "\t" << "文件保护码" << "\t" <<"文件长度" << endl;
-		for (int i = 0; i < user.next->Directory[index1].current_file_size; i++)  //输出文件的信息
+		for (int i = 0; i < user.next->Directory[index].current_file_size; i++)  //输出文件的信息
 		{
-			cout << "\t" << user.next->Directory[index1].ufd[i].filename << "\t" << user.next->Directory[index1].ufd[i].addr << "\t" << "\t" << user.next->Directory[index1].ufd[i].protect_code <<"\t" <<"\t" << user.next->Directory[index1].ufd[i].length << endl;
+			cout << "\t" << user.next->Directory[index].ufd[i].filename << "\t" << user.next->Directory[index].ufd[i].addr << "\t" << "\t" << user.next->Directory[index].ufd[i].protect_code <<"\t" <<"\t" << user.next->Directory[index].ufd[i].length << endl;
 		}
 	}
 }
@@ -697,6 +654,7 @@ void cd()
 	if (temp_File_Path == "..")	//返回到根目录
 	{
 		File_Path = "";
+		index=-1;
 		return;
 	}
 
@@ -704,6 +662,7 @@ void cd()
 	for (i = 0; i < user.next->user_Directory_size; i++)  //判断路径是否存在
 	{
 		if (temp_File_Path == user.next->Directory[i].Directory_Name)
+		    index=i;
 			break;
 	}
 	if (i >= user.next->user_Directory_size)
@@ -767,15 +726,10 @@ void ls()
 			cout << user.next->Directory[i].Directory_Name << "\t" ;
 		}
 	}
-	int index1; //标识当前目录在Directory数组中的下标
-	for (index1 = 0; index1 < user.next->user_Directory_size; index1++)
+
+	for (int a = 0; a < user.next->Directory[index].current_file_size; a++)    //遍历文件
 	{
-		if (File_Path == user.next->Directory[index1].Directory_Name)
-			break;
-	}
-	for (int a = 0; a < user.next->Directory[index1].current_file_size; a++)    //遍历文件
-	{
-		cout << user.next->Directory[index1].ufd[a].filename << "\t" ;
+		cout << user.next->Directory[index].ufd[a].filename << "\t" ;
 	}
 	cout << endl;
 }
@@ -786,33 +740,83 @@ void User_Interaction()  //用户输入命令
 		cout << "localhost :";
 	else
 		cout << user.user << "@localhost  home/" <<File_Path << ">";
-
+    int ture=0;
 	string operation;
 	cin >> operation;
 
 	if (operation == "login")
-	{
+	{   ture=1;
 		User_Login();
 	}
 	else if(operation !="login" && operation !="register" && operation !="help" && operation !="clear" && operation !="exit" && !User_Login_or_not())
 	{
+		ture=1;
 		cout<<"当前没有登录，请使用login进行登录，或者使用register进行注册"<<endl;
 	}
 	else if (operation=="logout" && User_Login_or_not())
 	{
+		ture=1;
 		User_Logout();
+	}
+	
+	else if (operation == "exit")
+	{
+		ture=1;
+		exit(0);
+	}
+	else if (operation == "cd" && User_Login_or_not())
+	{
+		ture=1;
+		cd();
+	}
+	else if (operation == "mkdir" && User_Login_or_not())
+	{
+		ture=1;
+		File name;
+		cin >> name;
+		mkdir(name);
+	}
+	else if (operation == "register")
+	{
+		ture=1;
+		User_Register();
+	}
+
+	else if (operation == "help")
+	{
+		ture=1;
+		Show_All();
+	}
+	else if (operation == "clear")
+	{
+		ture=1;
+		system("reset");
 	}
 	else if (operation == "dir" && User_Login_or_not())
 	{
+		ture=1;
 		dir();
 	}
-	else if (operation == "create" && User_Login_or_not())
+	else if (operation == "remove" && User_Login_or_not())
+	{
+		ture=1;
+		File name;
+		cin >> name;
+		Remove(name);
+	};
+
+
+	if(index<0&&ture==0){
+		cout<<"根目录无法运行该操作"<<endl;
+		return;
+	}
+
+	if (operation == "create" && User_Login_or_not())
 	{
 		File filename;
 		cin >> filename;
 		File_Create(filename);
-	}
-	else if (operation == "delete" && User_Login_or_not())
+	}else if (operation == "delete" && User_Login_or_not())
 	{
 		File filename;
 		cin >> filename;
@@ -887,52 +891,22 @@ void User_Interaction()  //用户输入命令
 			Write_File(name, buf, content.length());
 		}
 	}
+	
+	
 	else if (operation == "ls" && User_Login_or_not())
 	{
 		ls();
-	}
-	else if (operation == "exit")
-	{
-		exit(0);
-	}
-	else if (operation == "cd" && User_Login_or_not())
-	{
-		cd();
-	}
-	else if (operation == "mkdir" && User_Login_or_not())
-	{
-		File name;
-		cin >> name;
-		mkdir(name);
-	}
-	else if (operation == "register")
-	{
-		User_Register();
-	}
-	else if (operation == "remove" && User_Login_or_not())
-	{
-		File name;
-		cin >> name;
-		Remove(name);
-	}
+	}	
 	else if (operation == "change" && User_Login_or_not())
 	{
 		File name;
 		cin >> name;
 		Change_Attribute(name);
 	}
-	else if (operation == "help")
-	{
-		Show_All();
-	}
-	else if (operation == "clear")
-	{
-		system("reset");
-	}
 	else
-	{
+	{  if(ture==0)
 		cout << "命令错误，请重新输入" << endl;
-	}
+	};
 }
 
 void User_Register()  //用户注册
@@ -961,15 +935,19 @@ void User_Register()  //用户注册
 
 void Remove(string name)  //删除目录
 {
-	int index;
+	int index1;
 	int i;
 	for (i = 0; i < user.next->user_Directory_size; i++)
 	{
 		if (name == user.next->Directory[i].Directory_Name)
 		{
-			index = i;
+			index1 = i;
 			break;
 		}
+	}
+	if(index1==index){
+		cout << "不能删除当前所在目录" << endl;
+		return ;
 	}
 	if (i >= user.next->user_Directory_size)
 	{
@@ -977,10 +955,10 @@ void Remove(string name)  //删除目录
 		return;
 	}
 
-	for (int i = 0; i < user.next->Directory[index].current_file_size; i++)   //删除目录里面的文件
+	for (int i = 0; i < user.next->Directory[index1].current_file_size; i++)   //删除目录里面的文件
 	{//直接释这些文件所占的磁盘块
-		fat[user.next->Directory[index].ufd[i].addr].used = 0; //没有使用
-		int temp = fat[user.next->Directory[index].ufd[i].addr].next;
+		fat[user.next->Directory[index1].ufd[i].addr].used = 0; //没有使用
+		int temp = fat[user.next->Directory[index1].ufd[i].addr].next;
 		while (temp != -1)
 		{
 			fat[temp].used = 0;
@@ -989,14 +967,14 @@ void Remove(string name)  //删除目录
 	}
 	//删除目录项，就是将两个目录项的内容进行交换
 
-	user.next->Directory[index].current_file_size = user.next->Directory[user.next->user_Directory_size-1].current_file_size;  //注意这里需要减一，由于本身结构的限制
-	user.next->Directory[index].Directory_Name = user.next->Directory[user.next->user_Directory_size-1].Directory_Name;
+	user.next->Directory[index1].current_file_size = user.next->Directory[user.next->user_Directory_size-1].current_file_size;  //注意这里需要减一，由于本身结构的限制
+	user.next->Directory[index1].Directory_Name = user.next->Directory[user.next->user_Directory_size-1].Directory_Name;
 	for (int i = 0; i < user.next->Directory[user.next->user_Directory_size-1].current_file_size; i++)  //注意这里的减一
 	{
-		user.next->Directory[index].ufd[i].addr = user.next->Directory[user.next->user_Directory_size-1].ufd[i].addr;
-		user.next->Directory[index].ufd[i].filename = user.next->Directory[user.next->user_Directory_size-1].ufd[i].filename;
-		user.next->Directory[index].ufd[i].length = user.next->Directory[user.next->user_Directory_size-1].ufd[i].length;
-		user.next->Directory[index].ufd[i].protect_code = user.next->Directory[user.next->user_Directory_size-1].ufd[i].protect_code;
+		user.next->Directory[index1].ufd[i].addr = user.next->Directory[user.next->user_Directory_size-1].ufd[i].addr;
+		user.next->Directory[index1].ufd[i].filename = user.next->Directory[user.next->user_Directory_size-1].ufd[i].filename;
+		user.next->Directory[index1].ufd[i].length = user.next->Directory[user.next->user_Directory_size-1].ufd[i].length;
+		user.next->Directory[index1].ufd[i].protect_code = user.next->Directory[user.next->user_Directory_size-1].ufd[i].protect_code;
 	}
 	user.next->user_Directory_size--; //目录数量减1
 	cout << "删除目录成功" << endl;
