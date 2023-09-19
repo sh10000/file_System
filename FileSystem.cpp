@@ -657,7 +657,7 @@ void cd()
 		index=-1;
 		return;
 	}
-
+    if(index==-1){
 	int i;	//遍历文件目录
 	for (i = 0; i < user.next->user_Directory_size; i++)  //判断路径是否存在
 	{
@@ -672,6 +672,10 @@ void cd()
 	}
 	File_Path = temp_File_Path;
 	return;
+	}
+	else{
+		cout <<"没有在根目录下无法切换"<<endl;
+	}
 }
 
 // 创建目录
@@ -797,6 +801,12 @@ void User_Interaction()  //用户输入命令
 		ture=1;
 		dir();
 	}
+		else if (operation == "ls" && User_Login_or_not())
+		
+	{
+		ture=1;
+		ls();
+	}	
 	else if (operation == "remove" && User_Login_or_not())
 	{
 		ture=1;
@@ -893,10 +903,7 @@ void User_Interaction()  //用户输入命令
 	}
 	
 	
-	else if (operation == "ls" && User_Login_or_not())
-	{
-		ls();
-	}	
+
 	else if (operation == "change" && User_Login_or_not())
 	{
 		File name;
