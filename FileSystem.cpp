@@ -656,7 +656,7 @@ int User_Login()
 			else
 			{
 				cout << "密码错误" << endl;
-				break;
+				return -1;
 			}
 		}
 	}
