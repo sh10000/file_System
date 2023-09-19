@@ -927,7 +927,7 @@ void User_Interaction()  //用户输入命令
 	}
 	else if (operation == "clear")
 	{
-		system("clear");
+		system("reset");
 	}
 	else
 	{
@@ -1050,4 +1050,3 @@ int main()
 	free(fdisk); //程序结束，释放资源 
 	return 0;
 }
-
